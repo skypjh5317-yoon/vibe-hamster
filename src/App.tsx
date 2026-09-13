@@ -68,33 +68,69 @@ function App() {
   }
 
   const sendTestPacket = async (leftSpeed: number, rightSpeed: number) => {
-    const characteristic = characteristicRef.current
+  const characteristic = characteristicRef.current
 
-    if (!characteristic) {
-      setBluetoothError('먼저 햄스터를 연결해주세요.')
-      return
-    }
-
-    const packet = new Uint8Array([
-      0, 0, 0x10, leftSpeed, rightSpeed,
-      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    ])
-
-    console.log('Hamster-S packet decimal:', Array.from(packet))
-    console.log(
-      'Hamster-S packet hexadecimal:',
-      Array.from(packet, (value) => value.toString(16).padStart(2, '0')).join(' '),
-    )
-    console.log('Hamster-S packet length:', packet.length)
-
-    try {
-      // bundle.js serialize() 분석과 실제 Hamster-S GATT 확인을 바탕으로 한 실험 가설입니다.
-      await characteristic.writeValueWithoutResponse(packet)
-      setStatus(leftSpeed === 0 && rightSpeed === 0 ? '정지 packet 전송 완료' : '앞으로 테스트 packet 전송 완료')
-    } catch (error) {
-      setBluetoothError(error instanceof Error ? error.message : 'packet 전송에 실패했습니다.')
-    }
+  if (!characteristic) {
+    setBluetoothError('먼저 햄스터를 연결해주세요.')
+    return
   }
+
+  const packet = new Uint8Array([
+    0x00,
+    0x00,
+    0x10,
+    leftSpeed,
+    rightSpeed,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+  ])
+
+  console.log('🐹 ===== Hamster-S WRITE TEST =====')
+  console.log('Characteristic UUID:', characteristic.uuid)
+  console.log('Properties:', characteristic.properties)
+  console.log('Packet length:', packet.length)
+  console.log(
+    'Packet HEX:',
+    Array.from(packet)
+      .map((value) => value.toString(16).padStart(2, '0'))
+      .join(' '),
+  )
+  console.log('Left speed:', leftSpeed)
+  console.log('Right speed:', rightSpeed)
+
+  try {
+    await characteristic.writeValueWithoutResponse(packet)
+
+    console.log('🐹 WRITE SUCCESS')
+
+    setStatus(
+      leftSpeed === 0 && rightSpeed === 0
+        ? '정지 packet 전송 완료'
+        : '앞으로 테스트 packet 전송 완료',
+    )
+  } catch (error) {
+    console.error('🐹 WRITE FAILED:', error)
+
+    setBluetoothError(
+      error instanceof Error
+        ? error.message
+        : 'packet 전송에 실패했습니다.',
+    )
+  }
+}
 
   return (
     <main className="app-shell">
