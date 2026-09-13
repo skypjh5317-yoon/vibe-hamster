@@ -71,7 +71,7 @@ function App() {
   const characteristic = characteristicRef.current
 
   if (!characteristic) {
-    setBluetoothError('먼저 햄스터를 연결해주세요.')
+    alert('먼저 햄스터를 연결해주세요.')
     return
   }
 
@@ -99,6 +99,7 @@ function App() {
   ])
 
   const uuid = characteristic.uuid
+
   const properties = Object.entries(characteristic.properties)
     .filter(([, enabled]) => enabled)
     .map(([name]) => name)
@@ -116,9 +117,26 @@ function App() {
   console.log('Left speed:', leftSpeed)
   console.log('Right speed:', rightSpeed)
 
-  // 태블릿 화면에서도 테스트 정보를 확인할 수 있도록 표시
-  setStatus(
-    `전송 중...\nUUID: ${uuid}\nProperties: ${properties}\n길이: ${packet.length} bytes\nHEX: ${hex}`,
+  // 태블릿 화면에 테스트 정보를 바로 표시
+  alert(
+    `🐹 햄스터-S 테스트
+
+UUID:
+${uuid}
+
+Properties:
+${properties}
+
+Packet 길이:
+${packet.length} bytes
+
+Packet HEX:
+${hex}
+
+왼쪽 속도: ${leftSpeed}
+오른쪽 속도: ${rightSpeed}
+
+지금 전송을 시작합니다.`
   )
 
   try {
@@ -126,20 +144,44 @@ function App() {
 
     console.log('🐹 WRITE SUCCESS')
 
-    setStatus(
-      `✅ WRITE SUCCESS\nUUID: ${uuid}\n길이: ${packet.length} bytes\nHEX: ${hex}`,
+    alert(
+      `✅ WRITE SUCCESS
+
+햄스터-S로 packet 전송 성공!
+
+UUID:
+${uuid}
+
+Packet:
+${hex}
+
+왼쪽 속도: ${leftSpeed}
+오른쪽 속도: ${rightSpeed}`
     )
+
+    setStatus('테스트 packet 전송 완료')
   } catch (error) {
     console.error('🐹 WRITE FAILED:', error)
 
     const errorMessage =
-      error instanceof Error ? error.message : 'packet 전송에 실패했습니다.'
+      error instanceof Error
+        ? error.message
+        : 'packet 전송에 실패했습니다.'
+
+    alert(
+      `❌ WRITE FAILED
+
+오류:
+${errorMessage}
+
+UUID:
+${uuid}
+
+Packet:
+${hex}`
+    )
 
     setBluetoothError(errorMessage)
-
-    setStatus(
-      `❌ WRITE FAILED\nUUID: ${uuid}\n오류: ${errorMessage}`,
-    )
   }
 }
 
