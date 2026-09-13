@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import {
   connectToHamster,
   disconnectFromHamster,
+  type HamsterBluetoothCharacteristic,
   type HamsterConnection,
 } from './services/bluetoothService'
 import './App.css'
@@ -21,6 +22,7 @@ function App() {
   const [connection, setConnection] = useState<HamsterConnection | null>(null)
   const [isConnecting, setIsConnecting] = useState(false)
   const [bluetoothError, setBluetoothError] = useState('')
+  const characteristicRef = useRef<HamsterBluetoothCharacteristic | null>(null)
 
   const handleRunCommand = () => {
     const trimmedCommand = command.trim()
@@ -41,6 +43,7 @@ function App() {
     try {
       const nextConnection = await connectToHamster()
       setConnection(nextConnection)
+      characteristicRef.current = nextConnection.characteristic
     } catch (error) {
       if (error instanceof DOMException && error.name === 'NotFoundError') {
         setBluetoothError('Bluetooth 연결이 취소되었습니다.')
@@ -60,7 +63,37 @@ function App() {
     }
 
     setConnection(null)
+    characteristicRef.current = null
     setBluetoothError('')
+  }
+
+  const sendTestPacket = async (leftSpeed: number, rightSpeed: number) => {
+    const characteristic = characteristicRef.current
+
+    if (!characteristic) {
+      setBluetoothError('먼저 햄스터를 연결해주세요.')
+      return
+    }
+
+    const packet = new Uint8Array([
+      0, 0, 0x10, leftSpeed, rightSpeed,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    ])
+
+    console.log('Hamster-S packet decimal:', Array.from(packet))
+    console.log(
+      'Hamster-S packet hexadecimal:',
+      Array.from(packet, (value) => value.toString(16).padStart(2, '0')).join(' '),
+    )
+    console.log('Hamster-S packet length:', packet.length)
+
+    try {
+      // bundle.js serialize() 분석과 실제 Hamster-S GATT 확인을 바탕으로 한 실험 가설입니다.
+      await characteristic.writeValueWithoutResponse(packet)
+      setStatus(leftSpeed === 0 && rightSpeed === 0 ? '정지 packet 전송 완료' : '앞으로 테스트 packet 전송 완료')
+    } catch (error) {
+      setBluetoothError(error instanceof Error ? error.message : 'packet 전송에 실패했습니다.')
+    }
   }
 
   return (
@@ -157,6 +190,18 @@ function App() {
           <button type="button" className="primary-button" onClick={handleRunCommand}>
             <span aria-hidden="true">🚀</span> 명령 실행
           </button>
+
+          <div className="test-controls" aria-label="Hamster-S packet 테스트">
+            <p className="card-label">연결 테스트</p>
+            <div className="test-button-list">
+              <button type="button" className="test-button forward-test" onClick={() => void sendTestPacket(50, 50)}>
+                앞으로 테스트
+              </button>
+              <button type="button" className="test-button stop-test" onClick={() => void sendTestPacket(0, 0)}>
+                정지
+              </button>
+            </div>
+          </div>
 
           <div className="examples">
             <p className="card-label">이렇게 말해도 좋아요</p>

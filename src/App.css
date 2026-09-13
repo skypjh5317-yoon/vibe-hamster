@@ -32,6 +32,11 @@ button:focus-visible { outline: 3px solid #f2b84b; outline-offset: 3px; }
 .primary-button, .secondary-button { min-height: 56px; border-radius: 15px; }
 .primary-button { width: 100%; margin-top: 14px; background: #ef785f; color: #fff; box-shadow: 0 5px 0 #d85d48; font-size: 1.08rem; }
 .secondary-button { padding: 0 19px; background: #e8f3ed; color: #29704d; box-shadow: 0 4px 0 #c9e1d4; white-space: nowrap; }
+.test-controls { margin-top: 24px; padding-top: 20px; border-top: 1px solid #eee2d2; }
+.test-button-list { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+.test-button { min-height: 48px; border-radius: 13px; }
+.forward-test { background: #e8f3ed; color: #29704d; box-shadow: 0 4px 0 #c9e1d4; }
+.stop-test { background: #fff0ed; color: #b64f40; box-shadow: 0 4px 0 #f2c5bc; }
 .examples { margin-top: 26px; }
 .example-list { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 10px; }
 .example-button { min-height: 43px; padding: 8px 13px; border: 1px solid #eadfce; border-radius: 12px; background: #fffaf1; color: #66594c; font-size: 0.9rem; }

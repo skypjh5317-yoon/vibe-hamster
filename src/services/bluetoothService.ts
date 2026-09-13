@@ -12,6 +12,19 @@ export interface HamsterConnection {
   device: HamsterBluetoothDevice
   deviceName: string
   services: GattServiceInfo[]
+  characteristic: HamsterBluetoothCharacteristic
+}
+
+export interface HamsterBluetoothCharacteristic {
+  uuid: string
+  properties: Record<string, boolean>
+  writeValueWithoutResponse(value: BufferSource): Promise<void>
+}
+
+interface BluetoothRemoteGATTServiceLike {
+  uuid: string
+  getCharacteristic(uuid: string): Promise<HamsterBluetoothCharacteristic>
+  getCharacteristics(): Promise<BluetoothRemoteGATTCharacteristicLike[]>
 }
 
 interface BluetoothRemoteGATTCharacteristicLike {
@@ -19,13 +32,9 @@ interface BluetoothRemoteGATTCharacteristicLike {
   properties: Record<string, boolean>
 }
 
-interface BluetoothRemoteGATTServiceLike {
-  uuid: string
-  getCharacteristics(): Promise<BluetoothRemoteGATTCharacteristicLike[]>
-}
-
 interface BluetoothRemoteGATTServerLike {
   connected: boolean
+  getPrimaryService(uuid: string): Promise<BluetoothRemoteGATTServiceLike>
   getPrimaryServices(): Promise<BluetoothRemoteGATTServiceLike[]>
 }
 
@@ -62,6 +71,7 @@ const characteristicPropertyNames = [
 ] as const
 
 const HAMSTER_SERVICE_UUID = '00009001-9c80-11e3-a5e2-0800200c9a66'
+const HAMSTER_CHARACTERISTIC_UUID = '0000900A-9c80-11e3-a5e2-0800200c9a66'
 
 const getBluetooth = (): BluetoothLike => {
   const bluetooth = (navigator as NavigatorWithBluetooth).bluetooth
@@ -79,7 +89,7 @@ const getPropertyNames = (
 
 export const connectToHamster = async (): Promise<HamsterConnection> => {
   const device = await getBluetooth().requestDevice({
-    filters: [{ namePrefix: 'Hamster' }, { namePrefix: 'HAMSTER' }],
+    filters: [{ namePrefix: 'Hamster' }],
     optionalServices: [HAMSTER_SERVICE_UUID],
   })
 
@@ -94,6 +104,8 @@ export const connectToHamster = async (): Promise<HamsterConnection> => {
       throw new Error('햄스터-S에 연결할 수 없습니다.')
     }
 
+    const hamsterService = await server.getPrimaryService(HAMSTER_SERVICE_UUID)
+    const characteristic = await hamsterService.getCharacteristic(HAMSTER_CHARACTERISTIC_UUID)
     const services = await server.getPrimaryServices()
     const serviceInfo: GattServiceInfo[] = []
 
@@ -112,6 +124,7 @@ export const connectToHamster = async (): Promise<HamsterConnection> => {
       device,
       deviceName: device.name?.trim() || '이름 없는 장치',
       services: serviceInfo,
+      characteristic,
     }
   } catch (error) {
     device.gatt.disconnect()
