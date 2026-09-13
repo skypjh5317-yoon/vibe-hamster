@@ -40,6 +40,7 @@ export interface HamsterBluetoothDevice {
 
 interface BluetoothRequestDeviceOptions {
   filters: Array<{ namePrefix: string }>
+  optionalServices: string[]
 }
 
 interface BluetoothLike {
@@ -60,6 +61,8 @@ const characteristicPropertyNames = [
   'authenticatedSignedWrites',
 ] as const
 
+const HAMSTER_SERVICE_UUID = '00009001-9c80-11e3-a5e2-0800200c9a66'
+
 const getBluetooth = (): BluetoothLike => {
   const bluetooth = (navigator as NavigatorWithBluetooth).bluetooth
 
@@ -77,6 +80,7 @@ const getPropertyNames = (
 export const connectToHamster = async (): Promise<HamsterConnection> => {
   const device = await getBluetooth().requestDevice({
     filters: [{ namePrefix: 'Hamster' }, { namePrefix: 'HAMSTER' }],
+    optionalServices: [HAMSTER_SERVICE_UUID],
   })
 
   if (!device.gatt) {
