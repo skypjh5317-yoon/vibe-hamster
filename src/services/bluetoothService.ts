@@ -71,7 +71,7 @@ const characteristicPropertyNames = [
 ] as const
 
 const HAMSTER_SERVICE_UUID = '00009001-9c80-11e3-a5e2-0800200c9a66'
-const HAMSTER_CHARACTERISTIC_UUID = '0000900A-9c80-11e3-a5e2-0800200c9a66'
+const HAMSTER_CHARACTERISTIC_UUID = '0000900a-9c80-11e3-a5e2-0800200c9a66'
 
 const getBluetooth = (): BluetoothLike => {
   const bluetooth = (navigator as NavigatorWithBluetooth).bluetooth
