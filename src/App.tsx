@@ -68,7 +68,7 @@ function App() {
   }
 
   const sendTestPacket = async (leftSpeed: number, rightSpeed: number) => {
-    const TEST_PACKET_MODE: '20BYTE' | '11BYTE' = '20BYTE'
+    const TEST_PACKET_MODE: '20BYTE' | '11BYTE' = '11BYTE'
     const characteristic = characteristicRef.current
 
     if (!characteristic) {
