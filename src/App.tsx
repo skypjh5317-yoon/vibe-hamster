@@ -68,122 +68,76 @@ function App() {
   }
 
   const sendTestPacket = async (leftSpeed: number, rightSpeed: number) => {
-  const characteristic = characteristicRef.current
+    const TEST_PACKET_MODE: '20BYTE' | '11BYTE' = '20BYTE'
+    const characteristic = characteristicRef.current
 
-  if (!characteristic) {
-    alert('먼저 햄스터를 연결해주세요.')
-    return
-  }
+    if (!characteristic) {
+      alert('햄스터가 연결되어 있지 않습니다.\n먼저 \'햄스터 연결하기\'를 눌러 주세요.')
+      return
+    }
 
-  const packet = new Uint8Array([
-    0x00,
-    0x00,
-    0x10,
-    leftSpeed,
-    rightSpeed,
-    0x00,
-    0x00,
-    0x00,
-    0x00,
-    0x00,
-    0x00,
-    0x00,
-    0x00,
-    0x00,
-    0x00,
-    0x00,
-    0x00,
-    0x00,
-    0x00,
-    0x00,
-  ])
+    const toByte = (value: number) => ((value % 256) + 256) % 256
+    const packet =
+      TEST_PACKET_MODE === '20BYTE'
+        ? new Uint8Array([
+            0x00,
+            0x00,
+            0x10,
+            toByte(leftSpeed),
+            toByte(rightSpeed),
+            ...new Array(15).fill(0),
+          ])
+        : new Uint8Array([
+            0x00,
+            0x00,
+            0x10,
+            toByte(leftSpeed),
+            toByte(rightSpeed),
+            0x02,
+            0x03,
+            0x00,
+            0x00,
+            0x00,
+            0x40,
+          ])
 
-  const uuid = characteristic.uuid
+    const hex = Array.from(packet)
+      .map((value) => value.toString(16).padStart(2, '0').toUpperCase())
+      .join(' ')
 
-  const properties = Object.entries(characteristic.properties)
-    .filter(([, enabled]) => enabled)
-    .map(([name]) => name)
-    .join(', ')
+    alert(
+      `🐹 Hamster-S 패킷 테스트
 
-  const hex = Array.from(packet)
-    .map((value) => value.toString(16).padStart(2, '0'))
-    .join(' ')
-
-  console.log('🐹 ===== Hamster-S WRITE TEST =====')
-  console.log('Characteristic UUID:', uuid)
-  console.log('Properties:', properties)
-  console.log('Packet length:', packet.length)
-  console.log('Packet HEX:', hex)
-  console.log('Left speed:', leftSpeed)
-  console.log('Right speed:', rightSpeed)
-
-  // 태블릿 화면에 테스트 정보를 바로 표시
-  alert(
-    `🐹 햄스터-S 테스트
-
-UUID:
-${uuid}
-
-Properties:
-${properties}
-
-Packet 길이:
-${packet.length} bytes
-
-Packet HEX:
-${hex}
-
+방식: ${TEST_PACKET_MODE}
 왼쪽 속도: ${leftSpeed}
 오른쪽 속도: ${rightSpeed}
 
-지금 전송을 시작합니다.`
-  )
-
-  try {
-    await characteristic.writeValueWithoutResponse(packet)
-
-    console.log('🐹 WRITE SUCCESS')
-
-    alert(
-      `✅ WRITE SUCCESS
-
-햄스터-S로 packet 전송 성공!
-
-UUID:
-${uuid}
-
-Packet:
+패킷:
 ${hex}
 
-왼쪽 속도: ${leftSpeed}
-오른쪽 속도: ${rightSpeed}`
+전송 중...`
     )
 
-    setStatus('테스트 packet 전송 완료')
-  } catch (error) {
-    console.error('🐹 WRITE FAILED:', error)
+    try {
+      await characteristic.writeValueWithoutResponse(packet)
 
-    const errorMessage =
-      error instanceof Error
-        ? error.message
-        : 'packet 전송에 실패했습니다.'
+      alert(`🐹 Hamster-S 패킷 테스트
 
-    alert(
-      `❌ WRITE FAILED
+방식: ${TEST_PACKET_MODE}
 
-오류:
-${errorMessage}
+WRITE SUCCESS`)
+      setStatus('테스트 packet 전송 완료')
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error)
 
-UUID:
-${uuid}
+      alert(`🐹 Hamster-S 패킷 테스트
 
-Packet:
-${hex}`
-    )
+WRITE FAILED
 
-    setBluetoothError(errorMessage)
+오류 내용: ${errorMessage}`)
+      setBluetoothError(errorMessage)
+    }
   }
-}
 
   return (
     <main className="app-shell">
