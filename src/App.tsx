@@ -232,6 +232,14 @@ ${hex}`
             <span>장치 이름</span>
             <strong>{connection.deviceName}</strong>
           </div>
+          <div className="device-summary">
+            <span>A000 서비스:</span>
+            <strong>{connection.a000Status.includes('✅') ? '✅ 발견' : '❌ 없음'}</strong>
+          </div>
+          <div className="device-summary">
+            <span>A006 characteristic:</span>
+            <strong>{connection.a006Status.includes('✅') ? '✅ 발견' : '❌ 없음'}</strong>
+          </div>
           {connection.services.length > 0 ? (
             <div className="gatt-services">
               {connection.services.map((service) => (
